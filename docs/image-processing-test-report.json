@@ -1,0 +1,369 @@
+{
+  "executed_at": "2026-10-28T21:03:21Z",
+  "platform": "macOS arm64",
+  "java": "21.0.10",
+  "imagemagick": "7.1.2-33 Q16-HDRI",
+  "command": "sh mvnw -B -ntp -Dultimate.imagemagick.required=true clean test compile",
+  "totals": {
+    "tests": 372,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "image_suites": [
+    {
+      "suite": "ai.ultimate.tools.builtin.ImageProcessingCallbackTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "enabledWithoutConfiguredWorkspaceFailsClosed",
+        "registeredCallbackRejectsAnotherWorkspaceBeforeStagingOrExecution",
+        "explicitSingleWorkspaceConfigurationExposesTheTool",
+        "structuredSpringAiInvocationMatchesDirectValidationAndArtifacts",
+        "defaultConfigurationDoesNotExposeTheTool"
+      ]
+    },
+    {
+      "suite": "ai.ultimate.tools.builtin.ImageProcessingNativeTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "referenceQuadrantsProveCropOriginAndWebpRoundTrip",
+        "exifIsRemovedAfterOrientationIsApplied",
+        "saturationAndHueTransformKnownColorChannels",
+        "cropColorCorrectionAndWatermarkChangePixels",
+        "reproducibleLocalWorkloadMeasurements",
+        "simultaneousBatchesUseIndependentArtifactsAndCleanScratch",
+        "alphaAndSrgbProfileHaveDefinedOutputProperties",
+        "overPolicyDimensionsFailWithoutChangingUnrelatedFiles",
+        "registeredCallbackRunsTheRealNativeProcess",
+        "truncatedRasterFailsWithoutPublishingEarlierImage",
+        "realPngAndJpegBatchBecomeResizedWebp"
+      ]
+    },
+    {
+      "suite": "ai.ultimate.tools.builtin.ImageProcessingToolTest",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cases": [
+        "readersSeeCompleteFilesAndOnlyAManifestCommitsTheBatch",
+        "processDeadlineTerminatesLiveDescendant",
+        "managedRootIsNotATenantWorkspace",
+        "filenamesAreStagedBeforeImageMagickParsesThem",
+        "cleanupRefusesAReplacementScratchDirectory",
+        "batchConvertsWithBoundedArgumentsAndCleansStaging",
+        "rejectsNonRasterAndOversizedFiles",
+        "concurrentLimitRejectsThirdCallAndRecoversAfterFailure",
+        "timeoutCodeAndRecoveryAreMachineReadable",
+        "nativeFailureMissingOutputAndWrongFormatCleanScratch",
+        "unavailableAtomicPublicationFailsWithoutCopyFallback",
+        "resultEnvelopeHasStableCodesPathsAndUniqueCorrelation",
+        "secondImageFailurePublishesNothing",
+        "existingOutputNeverChanges",
+        "traversalAndCrossTenantSymlinksFailBeforeNativeProcess",
+        "runnerEnvironmentContainsOnlyExplicitlyAllowedValues",
+        "cropColorAndWatermarkAreExplicitArguments",
+        "competingOutputDuringPublicationRollsBackOnlyOurFiles",
+        "nativeRunnerDeadlineTerminatesProcessAndBoundsDiagnostic",
+        "changedOutputDirectoryCannotPublishOutsideWorkspace",
+        "interruptionPreservesFlagAndCleansScratch",
+        "publicationFailureAfterFirstFileLeavesNoCommittedBatch",
+        "validationRejectsOptionInjectionAndNonFiniteColor"
+      ]
+    }
+  ],
+  "all_suites": [
+    {
+      "name": "ai.ultimate.tools.builtin.CalculatorToolTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.ai.PromptAssemblerTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.memory.MemoryServiceTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.memory.MemoryControllerTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.memory.MemoryTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.rag.DocumentProcessingServiceTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.security.JwtServiceTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.agents.AgentPlannerTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.AudioProcessingToolRegistryTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.memory.MemoryExtractionServiceAdditionalTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.cli.MemoryCommandsTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.mcp.McpServerConfigTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.voice.SystemTextToSpeechServiceTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.jarvis.tools.builtin.ChromiumBrowsingToolTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.ToolRegistryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.UltimateApplicationTests",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.agents.AgentTest",
+      "tests": "26",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.chat.session.ChatSessionControllerTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.agents.AgentExecutorTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.rag.DocumentControllerTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.builtin.DateTimeToolTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.rag.TextExtractorTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.builtin.WebSearchToolTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.builtin.WeatherToolTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.agents.AgentControllerTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.ai.WorkingMemoryBuilderTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.builtin.ImageProcessingCallbackTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.jarvis.tools.builtin.AudioProcessingToolTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.rag.DocumentServiceTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.rag.RagSearchServiceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.voice.WhisperTranscriptionServiceTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.ai.orchestrator.AiOrchestratorTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.settings.SettingsControllerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.builtin.ImageProcessingNativeTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.rag.DocumentTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.voice.VoiceConversationServiceTest",
+      "tests": "18",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.memory.MemoryExtractionServiceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.memory.MemoryEmbeddingRepositoryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.agents.AgentOrchestratorTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ai.ultimate.tools.builtin.ImageProcessingToolTest",
+      "tests": "23",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "tested_source_sha256": {
+    "server/src/main/java/ai/ultimate/tools/builtin/ImageProcessingTool.java": "968baef5512abacc55b06abb7b275a2a41fdc51955daa8424320ddbf2d29b39c",
+    "server/src/test/java/ai/ultimate/tools/builtin/ImageProcessingCallbackTest.java": "e6b623bda7fa5fc00b3d3ac613d231c3df8b79626d203d9c68174ed4934d7114",
+    "server/src/test/java/ai/ultimate/tools/builtin/ImageProcessingNativeTest.java": "142a40c7f13b81977e5d600b16b5435f4a0274552ee745febdff1518525e4275",
+    "server/src/test/java/ai/ultimate/tools/builtin/ImageProcessingToolTest.java": "9b45963f2735619e15e90c9e9f524947fee7b707708274d93cc191ee522ecb51"
+  }
+}

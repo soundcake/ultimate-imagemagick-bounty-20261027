@@ -5,6 +5,9 @@ import ai.ultimate.tools.UltimateTool;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -30,34 +33,51 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@ConditionalOnProperty(name = "ultimate.imagemagick.enabled", havingValue = "true")
 public class ImageProcessingTool implements UltimateTool {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final Semaphore slots = new Semaphore(2);
     private static final long MAX_BYTES = 25L * 1024 * 1024;
     private final Path root;
+    private final Path authorizedWorkspace;
     private final String binary;
     private final Runner runner;
+    private final Publisher publisher;
 
-    public ImageProcessingTool() {
+    @Autowired
+    public ImageProcessingTool(@Value("${ultimate.imagemagick.workspace:}") String workspace) {
         this(Path.of(System.getProperty("user.home"), "ultimate-managed-workspaces"),
-                System.getProperty("ultimate.imagemagick.binary", "magick"), new NativeRunner());
+                configuredWorkspace(workspace), System.getProperty("ultimate.imagemagick.binary", "magick"), new NativeRunner());
     }
 
-    ImageProcessingTool(Path root, String binary, Runner runner) {
+    ImageProcessingTool(Path root, Path authorizedWorkspace, String binary, Runner runner) {
+        this(root, authorizedWorkspace, binary, runner, (completed, destination) -> Files.createLink(destination, completed));
+    }
+
+    ImageProcessingTool(Path root, Path authorizedWorkspace, String binary, Runner runner, Publisher publisher) {
         this.root = root.toAbsolutePath().normalize();
+        this.authorizedWorkspace = Objects.requireNonNull(authorizedWorkspace).toAbsolutePath().normalize();
         this.binary = binary;
         this.runner = runner;
+        this.publisher = publisher;
+    }
+
+    private static Path configuredWorkspace(String workspace) {
+        require(workspace != null && !workspace.isBlank(), "Set ultimate.imagemagick.workspace before enabling the tool");
+        Path path = Path.of(workspace);
+        require(path.isAbsolute(), "Configured workspace must be absolute");
+        return path;
     }
 
     @Tool(description = "Batch process local JPEG, PNG or WebP images with ImageMagick 7. "
             + "Use for WebP conversion, crop, resize, color correction, image watermarking and EXIF removal. "
             + "Applies crop, then aspect-preserving resize, color adjustment and optional bottom-right watermark. "
-            + "Always auto-orients and strips metadata. Returns JSON with status, code, requestId, outputs and message; never overwrites inputs. "
+            + "Always auto-orients and strips metadata. Returns JSON with status, code, requestId, outputs, manifest and message; never overwrites inputs. "
             + "Example: inputPaths=['photo.jpg'], outputDirectory='out', outputPrefix='web', "
             + "width=1200, height=1200, crop='', brightness=100, saturation=100, hue=100, "
             + "watermarkPath='', quality=85. Up to 10 images per call.")
     public String processImages(
-            @ToolParam(description = "Absolute existing workspace directly below ~/ultimate-managed-workspaces") String workspacePath,
+            @ToolParam(description = "Absolute workspace configured by the server administrator; other managed workspaces are not authorized") String workspacePath,
             @ToolParam(description = "1–10 workspace-relative raster file paths") List<String> inputPaths,
             @ToolParam(description = "Existing workspace-relative output directory, e.g. out") String outputDirectory,
             @ToolParam(description = "Output basename prefix, letters/digits/underscore/hyphen only") String outputPrefix,
@@ -70,13 +90,15 @@ public class ImageProcessingTool implements UltimateTool {
             @ToolParam(description = "Relative PNG/JPEG/WebP watermark image; empty for none") String watermarkPath,
             @ToolParam(description = "WebP quality 1–100") int quality) {
         String requestId = UUID.randomUUID().toString();
-        if (!slots.tryAcquire()) return response(requestId, false, "BUSY", "Two image batches are already running", List.of(), List.of());
+        if (!slots.tryAcquire()) return response(requestId, false, "BUSY", "Two image batches are already running", List.of(), "", List.of());
         String code = "PROCESSING_FAILED";
         String phase = "VALIDATION";
         List<String> recoveryErrors = new ArrayList<>();
         Path scratch = null;
         Object scratchKey = null;
         List<Path> published = new ArrayList<>();
+        List<String> outputs = List.of();
+        String manifest = "";
         Map<Path, Object> publishedKeys = new HashMap<>();
         String result = "Error: Image processing did not complete";
         boolean success = false;
@@ -85,6 +107,8 @@ public class ImageProcessingTool implements UltimateTool {
             Path allowed = root.toRealPath();
             Path workspace = Path.of(workspacePath).toRealPath();
             require(allowed.equals(workspace.getParent()), "Workspace must be a direct child of the managed root");
+            if (!workspace.equals(authorizedWorkspace.toRealPath()))
+                return response(requestId, false, "UNAUTHORIZED_WORKSPACE", "Workspace is not authorized for this tool instance", List.of(), "", List.of());
             Path output = relative(workspace, outputDirectory).toRealPath();
             require(Files.isDirectory(output), "Output directory must exist");
             List<Path> inputs = new ArrayList<>();
@@ -127,19 +151,26 @@ public class ImageProcessingTool implements UltimateTool {
                 results.add(target);
             }
             phase = "PUBLICATION";
-            // Publish only after every image succeeds. CREATE_NEW never replaces existing files.
+            // Hard links expose completed bytes atomically and fail if a destination exists.
+            // Unsupported/cross-filesystem publication fails closed; never fall back to copying.
             for (int i = 0; i < results.size(); i++) {
                 require(output.toRealPath().equals(output), "Output directory changed during processing");
                 Path target = destinations.get(i);
-                try (var out = Files.newOutputStream(target, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-                    published.add(target);
-                    publishedKeys.put(target, fileKey(target));
-                    Files.copy(results.get(i), out);
-                }
+                publisher.publish(results.get(i), target);
+                published.add(target);
+                publishedKeys.put(target, fileKey(target));
                 require(target.toRealPath().getParent().equals(output), "Unexpected published output location");
             }
-            result = "Created " + published.size() + " WebP image(s); metadata removed:\n"
-                    + String.join("\n", published.stream().map(Path::toString).toList());
+            outputs = published.stream().map(Path::toString).toList();
+            Path stagedManifest = scratch.resolve("manifest.json");
+            Files.writeString(stagedManifest, JSON.writeValueAsString(Map.of("requestId", requestId, "outputs", outputs)));
+            Path marker = output.resolve(".ultimate-image-" + requestId + ".json");
+            require(output.toRealPath().equals(output), "Output directory changed during publication");
+            publisher.publish(stagedManifest, marker);
+            published.add(marker);
+            publishedKeys.put(marker, fileKey(marker));
+            manifest = marker.toString();
+            result = "Created " + outputs.size() + " WebP image(s); metadata removed:\n" + String.join("\n", outputs);
             success = true;
             code = "OK";
         } catch (InterruptedException e) {
@@ -171,14 +202,14 @@ public class ImageProcessingTool implements UltimateTool {
             slots.release();
         }
         return response(requestId, success, code, result,
-                success ? published.stream().map(Path::toString).toList() : List.of(), recoveryErrors);
+                success ? outputs : List.of(), success ? manifest : "", recoveryErrors);
     }
 
     private static String response(String requestId, boolean success, String code, String message,
-                                   List<String> outputs, List<String> recoveryErrors) {
+                                   List<String> outputs, String manifest, List<String> recoveryErrors) {
         try {
             return JSON.writeValueAsString(Map.of("requestId", requestId, "status", success ? "SUCCESS" : "ERROR",
-                    "code", code, "message", message, "outputs", outputs, "recoveryErrors", recoveryErrors));
+                    "code", code, "message", message, "outputs", outputs, "manifest", manifest, "recoveryErrors", recoveryErrors));
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new IllegalStateException("Cannot serialize image result", e);
         }
@@ -284,6 +315,10 @@ public class ImageProcessingTool implements UltimateTool {
     interface Runner {
         void run(List<String> command, Path cwd, Map<String, String> environment, Duration timeout)
                 throws IOException, InterruptedException;
+    }
+
+    interface Publisher {
+        void publish(Path completed, Path destination) throws IOException;
     }
 
     static final class NativeFailure extends IOException {

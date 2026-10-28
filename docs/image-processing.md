@@ -1,7 +1,20 @@
 # Image processing tool
 
-`ImageProcessingTool` is discovered by the existing `UltimateTool` registry. It
-uses ImageMagick 7 locally; install `magick` on the server host and put it on the
+`ImageProcessingTool` is disabled by default. For a trusted single-user deployment,
+an administrator can enable it and bind it to one workspace in server configuration:
+
+```properties
+ultimate.imagemagick.enabled=true
+ultimate.imagemagick.workspace=/home/user/ultimate-managed-workspaces/photos
+```
+
+Enabling it without an absolute configured workspace fails startup. The existing
+`UltimateTool` registry exposes it only when enabled; every invocation must select
+that configured workspace. A model-supplied path cannot grant access to a different
+managed workspace. Keep it disabled for multi-user deployments until the platform
+supplies trusted per-caller workspace grants.
+
+It uses ImageMagick 7 locally; install `magick` on the server host and put it on the
 server's PATH. Alternatively set the server JVM property
 `-Dultimate.imagemagick.binary=/absolute/path/to/magick`.
 
@@ -46,28 +59,45 @@ up to 8192. Canonical input/output paths must remain within the selected
 workspace. Inputs are copied into unique temporary storage before processing.
 ImageMagick runs with a raster-only policy, disabled delegates/filters/indirect
 file reads, resource limits and a 60-second batch deadline. Scratch files are
-removed on success and error. Outputs are published only after the entire batch
-has processed; publication failure rolls back outputs created by that call.
+removed on success and error. The 60-second deadline covers native processing after
+input staging; it is not an end-to-end filesystem/cleanup deadline.
+
+After every image has processed, completed files are published through atomic,
+non-replacing hard links. Workspace scratch and output must share a filesystem
+that supports hard links; unsupported publication fails without a copy fallback.
+After all links succeed, a `.ultimate-image-<requestId>.json` manifest is published
+the same way. It contains `requestId` and the complete `outputs` list. Directory
+consumers must wait for this manifest before treating a batch as committed; complete
+individual files can be visible before the marker. Failed publication creates no
+commit marker and rolls back files created by that call. A successful tool response
+also identifies the committed manifest and outputs.
 
 The tool returns a JSON string with `status`, `code`, `requestId`, `message`,
-`outputs` and `recoveryErrors`. A fresh UUID identifies each invocation. Successful
+`outputs`, `manifest` and `recoveryErrors`. A fresh UUID identifies each invocation. Successful
 outputs contain the published absolute paths; failed calls return an empty outputs
-array. `code` is one of `OK`, `INVALID_REQUEST`, `BUSY`, `TIMEOUT`, `INTERRUPTED`,
+array and an empty manifest. `code` is one of `OK`, `INVALID_REQUEST`,
+`UNAUTHORIZED_WORKSPACE`, `BUSY`, `TIMEOUT`, `INTERRUPTED`,
 `NATIVE_FAILED`, `IO_ERROR`, `PUBLICATION_FAILED` or `PROCESSING_FAILED`.
 `recoveryErrors` separately reports any rollback/cleanup that could not complete.
 Two calls may run concurrently per Spring tool instance; additional calls return
 `BUSY` without starting a process. Slots are released after success, failure or
 interruption. It does not send
-images to an external service. Workspace access follows the server's existing
-managed-workspace model.
+images to an external service.
 
 ## Validation
 
-From `server/`, run `sh mvnw test` and `sh mvnw compile`. Native tests in
+From `server/`, run `sh mvnw test` and `sh mvnw compile`. `ImageProcessingCallbackTest`
+is included by the standard Surefire test naming rules and checks default-disabled
+registration, required configuration, registered-callback workspace rejection and
+JSON binding. The existing exclusions for application `*IntegrationTest` classes
+do not apply to it. Native tests in
 `ImageProcessingNativeTest` use the installed ImageMagick executable to check
 JPEG/PNG conversion, dimensions, crop/color/watermark pixels, EXIF removal,
 orientation and failed-batch cleanup. They are skipped if the executable is
-unavailable; install ImageMagick to run those checks. Unit tests exercise path
+unavailable locally; install ImageMagick to run those checks. CI builds pinned
+ImageMagick 7.1.2-34 and runs `./mvnw -Dultimate.imagemagick.required=true clean verify`,
+which fails if native tests cannot run. The native suite includes a real
+registry → Spring AI callback → ImageMagick → decoded-artifact check. Unit tests exercise path
 containment, existing-output preservation, publication races, process deadlines,
 invalid inputs and cleanup without needing ImageMagick.
 
@@ -86,7 +116,8 @@ are required. Lossy WebP assertions use explicit channel tolerances.
 | Truncated raster / unsupported SVG / oversized file | Rejection, no partial batch publication |
 | 16385×1 PNG | Width policy rejection, unrelated artifact preserved |
 | Simultaneous batches | Independent names, completed files, scratch removal |
-| Spring registry and MethodToolCallbackProvider | Discovery, JSON argument binding, actual published path, same validation as direct invocation |
+| Spring registry and MethodToolCallbackProvider | Disabled default, explicit workspace configuration, cross-workspace rejection, JSON binding, real native callback and published manifest |
+| Publication reader and failure injection | Complete visible files, marker after all outputs, rollback before commit, no copy fallback |
 
 ICC profiles are stripped, not retained. The reference color fixture is sRGB;
 this implementation does not perform explicit ICC conversion of arbitrary source
@@ -99,10 +130,10 @@ the effective environment, live-child termination on deadline, timeout recovery,
 concurrent admission, cross-workspace path rejection, directory substitution,
 publication rollback and replacement-scratch protection.
 
-The existing registry passes tool arguments without a caller principal or
-workspace ownership grant. Root containment is enforced here; authorization of
-which managed workspace a caller may select needs the platform's trusted identity
-and grant contract. File-key/path checks detect the tested replacements, but do
+The existing registry passes tool arguments without a caller principal. Opt-in
+therefore applies only to a trusted single-user deployment and one configured
+workspace; per-user authorization needs the platform's trusted identity and grant
+contract. File-key/path checks detect the tested replacements, but do
 not provide an OS sandbox against a hostile local process continuously racing
 ancestor directories. `finally` cleanup covers handled errors and interruption;
 a killed JVM cannot run it. Recovery after JVM kill and descendants that escape
@@ -135,9 +166,9 @@ report into a production acceptance gate.
 
 The recorded [sample run](image-processing-benchmark.json) on 2026-10-28 used
 macOS arm64, Java 21 and ImageMagick 7.1.2-33 Q16-HDRI: first/warm 512×512 calls
-20.1/18.4 ms, 4096×4096 call 399.5 ms, ten-image batch 176.5 ms, ten repeated
-small calls 183.4 ms total, and two concurrent large calls 422.6 ms total.
-Executable startup plus version output was 5.6 ms. Across these 25 native
-processes, maximum recorded native RSS was 219,529,216 bytes and maximum sampled
+20.0/18.7 ms, 4096×4096 call 609.5 ms, ten-image batch 168.7 ms, ten repeated
+small calls 177.9 ms total, and two concurrent large calls 974.6 ms total.
+Executable startup plus version output was 5.4 ms. Across these 25 native
+processes, maximum recorded native RSS was 219,332,608 bytes and maximum sampled
 scratch storage per call was 201,383,473 bytes. Per-process CPU/RSS reports are
 included in the sample JSON.

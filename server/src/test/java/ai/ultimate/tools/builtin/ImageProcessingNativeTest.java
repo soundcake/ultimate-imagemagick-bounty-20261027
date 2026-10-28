@@ -32,11 +32,17 @@ class ImageProcessingNativeTest {
             Process check=new ProcessBuilder(binary,"-version").redirectErrorStream(true).start();
             boolean finished=check.waitFor(5,TimeUnit.SECONDS);
             if(!finished)check.destroyForcibly();
-            assumeTrue(finished && check.exitValue()==0,"ImageMagick 7 is required for native tests");
-        } catch(java.io.IOException e){assumeTrue(false,"ImageMagick unavailable");}
+            boolean available=finished && check.exitValue()==0
+                    && new String(check.getInputStream().readAllBytes(),StandardCharsets.UTF_8).contains("ImageMagick 7.");
+            if(Boolean.getBoolean("ultimate.imagemagick.required"))assertTrue(available,"ImageMagick 7 is required");
+            assumeTrue(available,"ImageMagick 7 is required for native tests");
+        } catch(java.io.IOException e){
+            if(Boolean.getBoolean("ultimate.imagemagick.required"))fail("ImageMagick 7 is required",e);
+            assumeTrue(false,"ImageMagick unavailable");
+        }
         workspace=Files.createDirectory(root.resolve("tenant")).toRealPath();
         Files.createDirectory(workspace.resolve("out"));
-        tool=new ImageProcessingTool(root,binary,new ImageProcessingTool.NativeRunner());
+        tool=new ImageProcessingTool(root,workspace,binary,new ImageProcessingTool.NativeRunner());
     }
 
     void image(String name,int width,int height,Color color) throws Exception {
@@ -63,6 +69,24 @@ class ImageProcessingNativeTest {
         assertTrue(result.contains("Created 2"),result);
         assertEquals("WEBP 40 20",magick("identify","-format","%m %w %h",workspace.resolve("out/batch-1.webp").toString()));
         assertEquals("WEBP 13 40",magick("identify","-format","%m %w %h",workspace.resolve("out/batch-2.webp").toString()));
+        noScratch();
+    }
+
+    @Test void registeredCallbackRunsTheRealNativeProcess() throws Exception {
+        image("a.png",80,40,Color.RED);
+        var registry=new ai.ultimate.tools.ToolRegistry(List.of(tool));
+        var callback=org.springframework.ai.tool.method.MethodToolCallbackProvider.builder()
+                .toolObjects(registry.asArray()).build().getToolCallbacks()[0];
+        var args=new java.util.HashMap<String,Object>();
+        args.put("workspacePath",workspace.toString());args.put("inputPaths",List.of("a.png"));
+        args.put("outputDirectory","out");args.put("outputPrefix","callback");args.put("width",40);args.put("height",40);
+        args.put("crop","");args.put("brightness",100);args.put("saturation",100);args.put("hue",100);
+        args.put("watermarkPath","");args.put("quality",85);
+        var json=new com.fasterxml.jackson.databind.ObjectMapper();
+        var result=json.readTree(callback.call(json.writeValueAsString(args)));
+        assertEquals("SUCCESS",result.path("status").asText(),result.toString());
+        assertEquals("WEBP 40 20",magick("identify","-format","%m %w %h",result.path("outputs").get(0).asText()));
+        assertEquals(result.get("outputs"),json.readTree(Files.readString(Path.of(result.path("manifest").asText()))).get("outputs"));
         noScratch();
     }
 
@@ -199,7 +223,7 @@ class ImageProcessingNativeTest {
         // Measurements are reported, not compared with hardware-dependent acceptance thresholds.
         image("small.png",512,512,Color.RED);image("large.png",4096,4096,Color.GREEN);
         List<java.util.Map<String,Object>> samples=new java.util.concurrent.CopyOnWriteArrayList<>();
-        ImageProcessingTool measured=new ImageProcessingTool(root,binary,(command,cwd,environment,timeout)->{
+        ImageProcessingTool measured=new ImageProcessingTool(root,workspace,binary,(command,cwd,environment,timeout)->{
             var peakDisk=new java.util.concurrent.atomic.AtomicLong();
             var sampler=java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
             sampler.scheduleAtFixedRate(()->{

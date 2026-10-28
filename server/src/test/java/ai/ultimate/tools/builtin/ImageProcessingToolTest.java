@@ -31,7 +31,7 @@ class ImageProcessingToolTest {
     }
 
     ImageProcessingTool tool(ImageProcessingTool.Runner runner) {
-        return new ImageProcessingTool(root, "magick", runner);
+        return new ImageProcessingTool(root, workspace, "magick", runner);
     }
 
     String call(ImageProcessingTool tool, List<String> inputs) {
@@ -82,6 +82,64 @@ class ImageProcessingToolTest {
             produce(args,cwd,env,timeout);
         }),List.of("a.png","a.png"));
         assertTrue(response.contains("corrupt second image"));
+        try(var paths=Files.list(output)){assertEquals(0,paths.count());}
+        noScratch();
+    }
+
+    @Test void readersSeeCompleteFilesAndOnlyAManifestCommitsTheBatch() throws Exception {
+        var entered=new java.util.concurrent.CountDownLatch(1);
+        var release=new java.util.concurrent.CountDownLatch(1);
+        var count=new java.util.concurrent.atomic.AtomicInteger();
+        byte[] complete=new byte[1024*1024];System.arraycopy(WEBP,0,complete,0,WEBP.length);
+        var instance=new ImageProcessingTool(root,workspace,"magick",(a,c,e,t)->
+                Files.write(Path.of(a.getLast().substring(5)),complete),(source,target)->{
+            if(count.incrementAndGet()==2) {
+                entered.countDown();
+                try {if(!release.await(5,java.util.concurrent.TimeUnit.SECONDS))throw new IOException("reader timeout");}
+                catch(InterruptedException ex){Thread.currentThread().interrupt();throw new IOException(ex);}
+            }
+            Files.createLink(target,source);
+        });
+        try(var executor=java.util.concurrent.Executors.newSingleThreadExecutor()) {
+            var task=executor.submit(()->call(instance,List.of("a.png","a.png")));
+            try {
+                assertTrue(entered.await(3,java.util.concurrent.TimeUnit.SECONDS));
+                assertArrayEquals(complete,Files.readAllBytes(output.resolve("web-1.webp")));
+                assertFalse(Files.exists(output.resolve("web-2.webp")));
+                try(var entries=Files.list(output)){assertTrue(entries.noneMatch(p->p.toString().endsWith(".json")));}
+            } finally {release.countDown();}
+            var json=new com.fasterxml.jackson.databind.ObjectMapper();
+            var result=json.readTree(task.get());assertEquals("SUCCESS",result.path("status").asText());
+            var manifest=json.readTree(Files.readString(Path.of(result.path("manifest").asText())));
+            assertEquals(result.get("requestId"),manifest.get("requestId"));
+            assertEquals(result.get("outputs"),manifest.get("outputs"));
+            for(var path:manifest.get("outputs"))assertArrayEquals(complete,Files.readAllBytes(Path.of(path.asText())));
+        }
+        noScratch();
+    }
+
+    @Test void publicationFailureAfterFirstFileLeavesNoCommittedBatch() throws Exception {
+        var count=new java.util.concurrent.atomic.AtomicInteger();
+        var instance=new ImageProcessingTool(root,workspace,"magick",this::produce,(source,target)->{
+            if(count.incrementAndGet()==2) {
+                assertArrayEquals(WEBP,Files.readAllBytes(output.resolve("web-1.webp")));
+                throw new IOException("publication fixture failure");
+            }
+            Files.createLink(target,source);
+        });
+        var result=new com.fasterxml.jackson.databind.ObjectMapper().readTree(call(instance,List.of("a.png","a.png")));
+        assertEquals("PUBLICATION_FAILED",result.path("code").asText());
+        assertEquals("",result.path("manifest").asText());
+        try(var paths=Files.list(output)){assertEquals(0,paths.count());}
+        noScratch();
+    }
+
+    @Test void unavailableAtomicPublicationFailsWithoutCopyFallback() throws Exception {
+        var instance=new ImageProcessingTool(root,workspace,"magick",this::produce,(source,target)->{
+            throw new UnsupportedOperationException("hard links unavailable");
+        });
+        var result=new com.fasterxml.jackson.databind.ObjectMapper().readTree(call(instance,List.of("a.png")));
+        assertEquals("PUBLICATION_FAILED",result.path("code").asText());
         try(var paths=Files.list(output)){assertEquals(0,paths.count());}
         noScratch();
     }
