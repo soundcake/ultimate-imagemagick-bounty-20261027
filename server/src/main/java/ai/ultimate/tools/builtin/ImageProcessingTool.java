@@ -2,6 +2,7 @@
 package ai.ultimate.tools.builtin;
 
 import ai.ultimate.tools.UltimateTool;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -23,11 +24,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class ImageProcessingTool implements UltimateTool {
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private final Semaphore slots = new Semaphore(2);
     private static final long MAX_BYTES = 25L * 1024 * 1024;
     private final Path root;
     private final String binary;
@@ -47,7 +52,7 @@ public class ImageProcessingTool implements UltimateTool {
     @Tool(description = "Batch process local JPEG, PNG or WebP images with ImageMagick 7. "
             + "Use for WebP conversion, crop, resize, color correction, image watermarking and EXIF removal. "
             + "Applies crop, then aspect-preserving resize, color adjustment and optional bottom-right watermark. "
-            + "Always auto-orients and strips metadata. Returns new WebP paths or an error; never overwrites inputs. "
+            + "Always auto-orients and strips metadata. Returns JSON with status, code, requestId, outputs and message; never overwrites inputs. "
             + "Example: inputPaths=['photo.jpg'], outputDirectory='out', outputPrefix='web', "
             + "width=1200, height=1200, crop='', brightness=100, saturation=100, hue=100, "
             + "watermarkPath='', quality=85. Up to 10 images per call.")
@@ -64,6 +69,11 @@ public class ImageProcessingTool implements UltimateTool {
             @ToolParam(description = "Hue rotation percent 0–200; 100 preserves it") double hue,
             @ToolParam(description = "Relative PNG/JPEG/WebP watermark image; empty for none") String watermarkPath,
             @ToolParam(description = "WebP quality 1–100") int quality) {
+        String requestId = UUID.randomUUID().toString();
+        if (!slots.tryAcquire()) return response(requestId, false, "BUSY", "Two image batches are already running", List.of(), List.of());
+        String code = "PROCESSING_FAILED";
+        String phase = "VALIDATION";
+        List<String> recoveryErrors = new ArrayList<>();
         Path scratch = null;
         Object scratchKey = null;
         List<Path> published = new ArrayList<>();
@@ -86,6 +96,7 @@ public class ImageProcessingTool implements UltimateTool {
                 require(!Files.exists(target, LinkOption.NOFOLLOW_LINKS), "Output already exists: " + target.getFileName());
                 destinations.add(target);
             }
+            phase = "PROCESSING";
             scratch = Files.createTempDirectory(workspace, ".ultimate-image-").toRealPath();
             scratchKey = fileKey(scratch);
             Files.writeString(scratch.resolve("policy.xml"), policy(), StandardCharsets.UTF_8);
@@ -115,6 +126,7 @@ public class ImageProcessingTool implements UltimateTool {
                 require("WEBP".equals(coder(target)), "ImageMagick did not produce WebP");
                 results.add(target);
             }
+            phase = "PUBLICATION";
             // Publish only after every image succeeds. CREATE_NEW never replaces existing files.
             for (int i = 0; i < results.size(); i++) {
                 require(output.toRealPath().equals(output), "Output directory changed during processing");
@@ -129,11 +141,17 @@ public class ImageProcessingTool implements UltimateTool {
             result = "Created " + published.size() + " WebP image(s); metadata removed:\n"
                     + String.join("\n", published.stream().map(Path::toString).toList());
             success = true;
+            code = "OK";
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            result = "Error: Image processing interrupted";
+            result = "Image processing interrupted";
+            code = "INTERRUPTED";
         } catch (Exception e) {
-            result = "Error: " + safeMessage(e);
+            result = safeMessage(e);
+            code = e instanceof NativeFailure failure ? failure.code
+                    : phase.equals("VALIDATION") && e instanceof IllegalArgumentException ? "INVALID_REQUEST"
+                    : phase.equals("PUBLICATION") ? "PUBLICATION_FAILED"
+                    : e instanceof IOException ? "IO_ERROR" : "PROCESSING_FAILED";
         } finally {
             if (!success) {
                 for (Path output : published) {
@@ -143,15 +161,27 @@ public class ImageProcessingTool implements UltimateTool {
                             throw new IOException("Output changed; refusing rollback of " + output.getFileName());
                         Files.deleteIfExists(output);
                     }
-                    catch (IOException e) { result += "\nOutput rollback error: " + safeMessage(e); }
+                    catch (IOException e) { recoveryErrors.add("Output rollback error: " + safeMessage(e)); }
                 }
             }
             if (scratch != null) {
                 try { cleanup(scratch, scratchKey); }
-                catch (IOException e) { result += "\nCleanup error: " + safeMessage(e); }
+                catch (IOException e) { recoveryErrors.add("Cleanup error: " + safeMessage(e)); }
             }
+            slots.release();
         }
-        return result;
+        return response(requestId, success, code, result,
+                success ? published.stream().map(Path::toString).toList() : List.of(), recoveryErrors);
+    }
+
+    private static String response(String requestId, boolean success, String code, String message,
+                                   List<String> outputs, List<String> recoveryErrors) {
+        try {
+            return JSON.writeValueAsString(Map.of("requestId", requestId, "status", success ? "SUCCESS" : "ERROR",
+                    "code", code, "message", message, "outputs", outputs, "recoveryErrors", recoveryErrors));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize image result", e);
+        }
     }
 
     private static void validate(List<String> inputs, String prefix, int width, int height, String crop,
@@ -256,10 +286,23 @@ public class ImageProcessingTool implements UltimateTool {
                 throws IOException, InterruptedException;
     }
 
+    static final class NativeFailure extends IOException {
+        final String code;
+        NativeFailure(String code, String message) { super(message); this.code = code; }
+    }
+
     static final class NativeRunner implements Runner {
         public void run(List<String> command, Path cwd, Map<String, String> environment, Duration timeout)
                 throws IOException, InterruptedException {
             ProcessBuilder builder = new ProcessBuilder(command).directory(cwd.toFile()).redirectErrorStream(true);
+            // Do not pass provider credentials, loader hooks or user ImageMagick overrides to a decoder.
+            String path = System.getenv("PATH");
+            String systemRoot = System.getenv("SystemRoot");
+            builder.environment().clear();
+            if (path != null) builder.environment().put("PATH", path);
+            if (systemRoot != null) builder.environment().put("SystemRoot", systemRoot);
+            builder.environment().putAll(Map.of("LANG", "C", "LC_ALL", "C", "HOME", cwd.toString(),
+                    "XDG_CONFIG_HOME", cwd.toString(), "TMPDIR", cwd.toString(), "TMP", cwd.toString(), "TEMP", cwd.toString()));
             builder.environment().putAll(environment);
             Process process = builder.start();
             process.getOutputStream().close();
@@ -277,12 +320,12 @@ public class ImageProcessingTool implements UltimateTool {
             });
             try {
                 if (!process.waitFor(Math.max(1, timeout.toMillis()), TimeUnit.MILLISECONDS))
-                    throw new IOException("ImageMagick exceeded the batch deadline");
+                    throw new NativeFailure("TIMEOUT", "ImageMagick exceeded the batch deadline");
                 if (process.exitValue() != 0) {
                     String message;
                     try { message = diagnostic.get(2, TimeUnit.SECONDS); }
                     catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException e) { message = "diagnostic unavailable"; }
-                    throw new IOException("ImageMagick exited " + process.exitValue() + ": " + message);
+                    throw new NativeFailure("NATIVE_FAILED", "ImageMagick exited " + process.exitValue() + ": " + message);
                 }
             } finally {
                 process.descendants().forEach(ProcessHandle::destroyForcibly);

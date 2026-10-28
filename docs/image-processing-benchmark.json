@@ -1,0 +1,140 @@
+{
+  "first512TotalMs": 20.067958,
+  "warm512TotalMs": 18.414,
+  "large4096TotalMs": 399.4875,
+  "batch10TotalMs": 176.525,
+  "repeat512TotalMs": 183.404375,
+  "concurrent2LargeTotalMs": 422.628167,
+  "runtime": "Version: ImageMagick 7.1.2-33 Q16-HDRI aarch64 4bab3bc37:20261010 https://imagemagick.org",
+  "processStartupVersionMs": 5.626583,
+  "platform": "Mac OS X aarch64",
+  "samples": [
+    {
+      "nativeWallMs": 17.993541,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11108352  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 943  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  20  involuntary context switches\n           225947125  instructions retired\n            51165170  cycles elapsed\n             8470888  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.97075,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11010048  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 937  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  18  involuntary context switches\n           227511829  instructions retired\n            51785926  cycles elapsed\n             8372584  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 397.921541,
+      "sampledScratchPeakBytes": 201383473,
+      "timeReport": "        0.39 real         0.33 user         0.04 sys\n           219529216  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                1435  page reclaims\n               12295  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                 105  voluntary context switches\n                 943  involuntary context switches\n          4834013341  instructions retired\n          1550954724  cycles elapsed\n            16466280  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 18.84775,
+      "sampledScratchPeakBytes": 17597,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10616832  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 916  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  11  involuntary context switches\n           226780480  instructions retired\n            52048126  cycles elapsed\n             7995752  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.427375,
+      "sampledScratchPeakBytes": 17799,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11042816  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 939  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  13  involuntary context switches\n           224196184  instructions retired\n            48565518  cycles elapsed\n             8405352  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.428333,
+      "sampledScratchPeakBytes": 18203,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10600448  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 912  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  16  involuntary context switches\n           224101316  instructions retired\n            51202810  cycles elapsed\n             8012136  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.617416,
+      "sampledScratchPeakBytes": 18405,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11042816  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 939  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  16  involuntary context switches\n           224134667  instructions retired\n            50017652  cycles elapsed\n             8405352  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.96325,
+      "sampledScratchPeakBytes": 18405,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10829824  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 926  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  18  involuntary context switches\n           224162371  instructions retired\n            51106896  cycles elapsed\n             8192360  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.748625,
+      "sampledScratchPeakBytes": 18607,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11059200  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 943  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  24  involuntary context switches\n           224533604  instructions retired\n            49815247  cycles elapsed\n             8421736  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.136458,
+      "sampledScratchPeakBytes": 18809,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11026432  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 938  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  17  involuntary context switches\n           224204871  instructions retired\n            48484716  cycles elapsed\n             8388968  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 15.812958,
+      "sampledScratchPeakBytes": 19011,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11059200  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 940  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  16  involuntary context switches\n           224199247  instructions retired\n            48043352  cycles elapsed\n             8421736  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.344125,
+      "sampledScratchPeakBytes": 19213,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11059200  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 940  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  26  involuntary context switches\n           224296888  instructions retired\n            49910086  cycles elapsed\n             8421736  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.605167,
+      "sampledScratchPeakBytes": 19617,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10993664  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 936  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  18  involuntary context switches\n           224212648  instructions retired\n            48693772  cycles elapsed\n             8356200  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.295208,
+      "sampledScratchPeakBytes": 2450,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10993664  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 936  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  15  involuntary context switches\n           226973323  instructions retired\n            50442518  cycles elapsed\n             8356200  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.091333,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11042816  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 939  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  14  involuntary context switches\n           226957279  instructions retired\n            50654477  cycles elapsed\n             8405352  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.154959,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11075584  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 941  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  16  involuntary context switches\n           227052504  instructions retired\n            49031641  cycles elapsed\n             8438120  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.318042,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11075584  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 941  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  12  involuntary context switches\n           226915948  instructions retired\n            49536489  cycles elapsed\n             8438120  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.685,
+      "sampledScratchPeakBytes": 2450,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11042816  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 942  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  21  involuntary context switches\n           228013689  instructions retired\n            49903707  cycles elapsed\n             8405352  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.343541,
+      "sampledScratchPeakBytes": 2450,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11042816  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 942  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  12  involuntary context switches\n           226946673  instructions retired\n            51393923  cycles elapsed\n             8405352  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.608292,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10633216  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 914  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  14  involuntary context switches\n           226837593  instructions retired\n            50162989  cycles elapsed\n             7995752  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 16.707583,
+      "sampledScratchPeakBytes": 2450,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10698752  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 918  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                   9  involuntary context switches\n           226783140  instructions retired\n            48861655  cycles elapsed\n             8061288  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.299125,
+      "sampledScratchPeakBytes": 2450,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            10682368  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 917  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  17  involuntary context switches\n           226965092  instructions retired\n            51324901  cycles elapsed\n             8061288  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 17.232667,
+      "sampledScratchPeakBytes": 2652,
+      "timeReport": "        0.01 real         0.00 user         0.00 sys\n            11042816  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                 942  page reclaims\n                   8  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   0  voluntary context switches\n                  17  involuntary context switches\n           227041208  instructions retired\n            50766632  cycles elapsed\n             8405352  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 372.945417,
+      "sampledScratchPeakBytes": 201383473,
+      "timeReport": "        0.36 real         0.32 user         0.03 sys\n           219316224  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                1423  page reclaims\n               12295  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                 181  voluntary context switches\n                  55  involuntary context switches\n          4821072406  instructions retired\n          1505469189  cycles elapsed\n            16220520  peak memory footprint\n"
+    },
+    {
+      "nativeWallMs": 420.504042,
+      "sampledScratchPeakBytes": 201383473,
+      "timeReport": "        0.41 real         0.33 user         0.04 sys\n           219512832  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                1436  page reclaims\n               12295  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                  27  voluntary context switches\n                 930  involuntary context switches\n          4831818145  instructions retired\n          1566901994  cycles elapsed\n            16433512  peak memory footprint\n"
+    }
+  ],
+  "measuredAt": "2026-10-28T17:34:19Z",
+  "cpu": "Apple M4 Pro"
+}
